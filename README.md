@@ -22,6 +22,18 @@ git clone <link del github>
 cd <carpeta raiz del repositorio>
 ```
 
+# Creacion de externos
+- creacion de volumenes
+```bash
+docker volume create hdfs_namenode
+docker volume create hdfs_datanode
+```
+- perimisos
+```bash
+sudo chown -R 1000:1000 /var/lib/docker/volumes/hdfs_namenode/_data
+sudo chown -R 1000:1000 /var/lib/docker/volumes/hdfs_datanode/_data
+
+```
 # Levantar el sistema
 ```bash
 docker compose up -d
@@ -67,7 +79,7 @@ docker exec -it namenode hdfs dfs -ls /input
 - Copiar scripts al contenedor Pig: 
 ```bash
 docker cp scripts/run_pig_wordcount.sh pig:/opt/run_pig_wordcount.sh
-docker cp pig/.                       pig:/opt/pig-scripts/
+docker cp pig/.pig:/opt/pig-scripts/
 docker exec -it pig chmod +x /opt/run_pig_wordcount.sh
 
 ```
@@ -105,7 +117,7 @@ muestra de resultados:
 docker exec -it namenode hdfs dfs -cat /output/compare/<poner nombre de alguna carpeta generada anteriormente>/part*
 
 ```
-
+se le puede agregar "| head -n" , donde n es el numero de datos que quiere ver
 # Apagar el sistema
 ```bash
 docker compose down -v
