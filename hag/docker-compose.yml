@@ -1,0 +1,66 @@
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    container_name: namenode
+    hostname: namenode
+    environment:
+      - ENSURE_NAMENODE_DIR=/opt/hadoop/dfs/name
+    command: >
+      bash -c "
+        if [ ! -d /opt/hadoop/dfs/name/current ]; then
+          echo '*** Formatting HDFS NameNode ***';
+          hdfs namenode -format -force;
+        fi;
+        hdfs --daemon start namenode;
+        tail -f /dev/null
+      "
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs_namenode:/opt/hadoop/dfs/name
+      - ./hadoop-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./hadoop-conf/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+
+  datanode:
+    image: apache/hadoop:3.3.6
+    container_name: datanode
+    hostname: datanode
+    environment:
+      - ENSURE_DATANODE_DIR=/opt/hadoop/dfs/data
+    command: >
+      bash -c "
+        hdfs --daemon start datanode;
+        tail -f /dev/null
+      "
+    depends_on:
+      - namenode
+    ports:
+      - "9864:9864"
+    volumes:
+      - hdfs_datanode:/opt/hadoop/dfs/data
+      - ./hadoop-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./hadoop-conf/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+
+  pig:
+    build: ./docker/pig
+    container_name: pig
+    depends_on:
+      - namenode
+      - datanode
+    volumes:
+      - ./pig:/opt/pig-scripts
+      - ./data:/data
+      - ./scripts:/scripts
+    working_dir: /opt/pig-scripts
+    tty: true
+    stdin_open: true
+
+volumes:
+  hdfs_namenode:
+    external: true
+  hdfs_datanode:
+    external: true
+
+
+
